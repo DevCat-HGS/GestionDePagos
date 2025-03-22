@@ -41,7 +41,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 } else {
   app.get('/', (req, res) => {
-    res.send('API está funcionando...');
+    res.send('API ADSO running');
   });
 }
 
