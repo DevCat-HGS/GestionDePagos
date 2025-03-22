@@ -84,3 +84,109 @@ const getPaymentById = async (req, res) => {
       .populate('createdBy', 'name email');
 
     if (payment) {
+      res.json(payment);
+    } else {
+      res.status(404).json({ message: 'Pago no encontrado' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Actualizar un pago
+// @route   PUT /api/payments/:id
+// @access  Private
+const updatePayment = async (req, res) => {
+  try {
+    const { clientName, clientId, amount, date, status, paymentMethod, notes } = req.body;
+
+    const payment = await Payment.findById(req.params.id);
+
+    if (payment) {
+      payment.clientName = clientName || payment.clientName;
+      payment.clientId = clientId || payment.clientId;
+      payment.amount = amount || payment.amount;
+      payment.date = date || payment.date;
+      payment.status = status || payment.status;
+      payment.paymentMethod = paymentMethod || payment.paymentMethod;
+      payment.notes = notes || payment.notes;
+
+      const updatedPayment = await payment.save();
+      res.json(updatedPayment);
+    } else {
+      res.status(404).json({ message: 'Pago no encontrado' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Eliminar un pago
+// @route   DELETE /api/payments/:id
+// @access  Private
+const deletePayment = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id);
+
+    if (payment) {
+      await payment.deleteOne();
+      res.json({ message: 'Pago eliminado' });
+    } else {
+      res.status(404).json({ message: 'Pago no encontrado' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Obtener pagos semanales
+// @route   GET /api/payments/weekly
+// @access  Private
+const getWeeklyPayments = async (req, res) => {
+  try {
+    // Obtener la semana y año actual si no se proporcionan
+    const now = new Date();
+    const weekNumber = parseInt(req.query.weekNumber) || getWeekNumber(now);
+    const year = parseInt(req.query.year) || now.getFullYear();
+
+    const payments = await Payment.find({
+      weekNumber,
+      year
+    }).sort({ date: 1 }).populate('createdBy', 'name email');
+
+    // Calcular totales por estado
+    const totals = {
+      pagado: 0,
+      pendiente: 0,
+      cancelado: 0,
+      total: 0
+    };
+
+    payments.forEach(payment => {
+      if (payment.status === 'pagado') {
+        totals.pagado += payment.amount;
+      } else if (payment.status === 'pendiente') {
+        totals.pendiente += payment.amount;
+      } else if (payment.status === 'cancelado') {
+        totals.cancelado += payment.amount;
+      }
+      totals.total += payment.amount;
+    });
+
+    res.json({
+      weekNumber,
+      year,
+      payments,
+      totals
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Función auxiliar para obtener el número de semana de una fecha
+const getWeekNumber = (date) => {
+  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+  const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+};
