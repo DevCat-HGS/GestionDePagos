@@ -190,3 +190,12 @@ const getWeekNumber = (date) => {
   const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
   return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 };
+
+module.exports = {
+  createPayment,
+  getPayments,
+  getPaymentById,
+  updatePayment,
+  deletePayment,
+  getWeeklyPayments,
+};

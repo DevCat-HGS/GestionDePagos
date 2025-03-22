@@ -8,7 +8,9 @@ const {
   getUsers, 
   getUserById, 
   updateUser, 
-  deleteUser 
+  deleteUser,
+  getPendingUsers,
+  approveUser
 } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -25,9 +27,15 @@ router.route('/profile')
 router.route('/')
   .get(protect, admin, getUsers);
 
+router.route('/pending')
+  .get(protect, admin, getPendingUsers);
+
 router.route('/:id')
   .get(protect, admin, getUserById)
   .put(protect, admin, updateUser)
   .delete(protect, admin, deleteUser);
+  
+router.route('/:id/approve')
+  .put(protect, admin, approveUser);
 
 module.exports = router;

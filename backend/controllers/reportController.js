@@ -95,4 +95,35 @@ const generateExcelReport = async (req, res) => {
           statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'C6EFCE' } };
           statusCell.font = { color: { argb: '006100' } };
         } else if (statusCell.value === 'pendiente') {
-          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEB9C' }
+          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEB9C' } };
+          statusCell.font = { color: { argb: '9C5700' } };
+        } else if (statusCell.value === 'cancelado') {
+          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC7CE' } };
+          statusCell.font = { color: { argb: '9C0006' } };
+        }
+      }
+    });
+    
+    // Ajustar el ancho de las columnas automáticamente
+    worksheet.columns.forEach(column => {
+      column.width = Math.max(column.width, 12);
+    });
+    
+    // Crear un buffer para el archivo Excel
+    const buffer = await workbook.xlsx.writeBuffer();
+    
+    // Configurar encabezados para la descarga
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=reporte-pagos-${new Date().toISOString().split('T')[0]}.xlsx`);
+    
+    // Enviar el archivo
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error al generar reporte Excel:', error);
+    res.status(500).json({ message: 'Error al generar el reporte de Excel', error: error.message });
+  }
+};
+
+module.exports = {
+  generateExcelReport,
+};

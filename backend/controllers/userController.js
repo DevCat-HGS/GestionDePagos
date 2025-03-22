@@ -206,3 +206,67 @@ const deleteUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Obtener usuarios pendientes de aprobación
+// @route   GET /api/users/pending
+// @access  Private/Admin
+const getPendingUsers = async (req, res) => {
+  try {
+    const pendingUsers = await User.find({ approvalStatus: 'pending' }).select('-password');
+    res.json(pendingUsers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Aprobar o rechazar un usuario
+// @route   PUT /api/users/:id/approve
+// @access  Private/Admin
+const approveUser = async (req, res) => {
+  try {
+    const { approve } = req.body;
+    
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    if (user.approvalStatus !== 'pending') {
+      return res.status(400).json({ 
+        message: `Este usuario ya ha sido ${user.approvalStatus === 'approved' ? 'aprobado' : 'rechazado'}`
+      });
+    }
+    
+    user.isApproved = approve;
+    user.approvalStatus = approve ? 'approved' : 'rejected';
+    user.approvedBy = req.user._id;
+    
+    const updatedUser = await user.save();
+    
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      isApproved: updatedUser.isApproved,
+      approvalStatus: updatedUser.approvalStatus,
+      message: approve ? 'Usuario aprobado correctamente' : 'Usuario rechazado correctamente',
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  updateUserProfile,
+  getUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  getPendingUsers,
+  approveUser,
+};
