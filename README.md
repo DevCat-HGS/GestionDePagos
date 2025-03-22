@@ -66,4 +66,4 @@ Sistema de gestión de pagos que permite registrar y dar seguimiento a los pagos
 ## Desarrollo Futuro
 - Implementación de notificaciones
 - Panel de administración avanzado
-- Aplicación móvil complementaria
+- Integración con sistemas financieros
