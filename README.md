@@ -54,14 +54,14 @@ Sistema de gestión de pagos que permite registrar y dar seguimiento a los pagos
 ## Requisitos de Instalación
 - Node.js (v14 o superior)
 - MongoDB
-- NPM o Yarn
+- NPM
 
 ## Configuración Inicial
 1. Clonar el repositorio
 2. Instalar dependencias: `npm install`
 3. Configurar variables de entorno
 4. Iniciar MongoDB
-5. Ejecutar el servidor: `npm start`
+5. Ejecutar el servidor: `npm run dev`
 
 ## Desarrollo Futuro
 - Implementación de notificaciones
