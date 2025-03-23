@@ -5,6 +5,7 @@ import { Container } from 'react-bootstrap';
 // Components
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
@@ -35,25 +36,34 @@ function App() {
       <main className="main-content">
         <Container>
           <Routes>
+            {/* Rutas públicas */}
             <Route path="/" element={<HomeScreen />} />
             <Route path="/login" element={<LoginScreen />} />
             <Route path="/register" element={<RegisterScreen />} />
-            <Route path="/dashboard" element={<DashboardScreen />} />
             <Route path="/pending-approval" element={<PendingApprovalScreen />} />
-            <Route path="/payments" element={<PaymentListScreen />} />
-            <Route path="/payments/create" element={<PaymentCreateScreen />} />
-            <Route path="/payments/:id" element={<PaymentDetailScreen />} />
-            <Route path="/payments/:id/edit" element={<PaymentEditScreen />} />
-            <Route path="/users" element={<UserListScreen />} />
-            <Route path="/users/:id/edit" element={<UserEditScreen />} />
-            <Route path="/profile" element={<ProfileScreen />} />
-            <Route path="/reports" element={<ReportScreen />} />
-            {/* Rutas de Eventos */}
-            <Route path="/events" element={<EventListScreen />} />
-            <Route path="/events/create" element={<EventCreateScreen />} />
-            <Route path="/events/:id" element={<EventDetailScreen />} />
-            <Route path="/events/:id/edit" element={<EventEditScreen />} />
-            <Route path="/events/report" element={<EventReportScreen />} />
+            
+            {/* Rutas protegidas para usuarios autenticados */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<DashboardScreen />} />
+              <Route path="/payments" element={<PaymentListScreen />} />
+              <Route path="/payments/:id" element={<PaymentDetailScreen />} />
+              <Route path="/profile" element={<ProfileScreen />} />
+            </Route>
+            
+            {/* Rutas protegidas solo para administradores */}
+            <Route element={<ProtectedRoute adminOnly={true} />}>
+              <Route path="/payments/create" element={<PaymentCreateScreen />} />
+              <Route path="/payments/:id/edit" element={<PaymentEditScreen />} />
+              <Route path="/users" element={<UserListScreen />} />
+              <Route path="/users/:id/edit" element={<UserEditScreen />} />
+              <Route path="/reports" element={<ReportScreen />} />
+              <Route path="/events" element={<EventListScreen />} />
+              <Route path="/events/create" element={<EventCreateScreen />} />
+              <Route path="/events/:id" element={<EventDetailScreen />} />
+              <Route path="/events/:id/edit" element={<EventEditScreen />} />
+              <Route path="/events/report" element={<EventReportScreen />} />
+            </Route>
+            
             <Route path="*" element={<NotFoundScreen />} />
           </Routes>
         </Container>

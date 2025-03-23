@@ -1,11 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card } from 'react-bootstrap';
+import { Row, Col, Card, Table } from 'react-bootstrap';
 import { FaUsers, FaMoneyBillWave, FaCalendarAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
+import PaymentStatusBadge from '../components/PaymentStatusBadge';
 import axios from 'axios';
+
+// Create axios instance with base URL and auth token
+const API = axios.create({
+  baseURL: '/api',
+});
+
+// Request interceptor for adding auth token
+API.interceptors.request.use(
+  (config) => {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      const token = JSON.parse(userInfo).token;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const DashboardScreen = () => {
   const navigate = useNavigate();
@@ -20,26 +41,27 @@ const DashboardScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // Check if user is logged in
+  // Estado para almacenar la información del usuario
+  const [userInfo, setUserInfo] = useState(null);
+  
+  // Obtener información del usuario del localStorage
   useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (!userInfo) {
+    const storedUserInfo = localStorage.getItem('userInfo');
+    if (storedUserInfo) {
+      setUserInfo(JSON.parse(storedUserInfo));
+    } else {
       navigate('/login');
     }
   }, [navigate]);
   
-  // Fetch dashboard data
+  // Obtener datos del dashboard
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const config = {
-          headers: {
-            Authorization: `Bearer ${userInfo.token}`,
-          },
-        };
+        setLoading(true);
+        setError('');
         
-        const { data } = await axios.get('/api/users/dashboard', config);
+        const { data } = await API.get('/users/dashboard');
         setStats(data);
       } catch (error) {
         setError(
@@ -53,8 +75,10 @@ const DashboardScreen = () => {
       }
     };
     
-    fetchDashboardData();
-  }, []);
+    if (userInfo) {
+      fetchDashboardData();
+    }
+  }, [userInfo]);
   
   // Format date for display
   const formatDate = (dateString) => {
@@ -73,13 +97,14 @@ const DashboardScreen = () => {
   
   return (
     <>
-      <h1 className="mb-4">Dashboard</h1>
+      <h1 className="mb-4">Dashboard {userInfo && userInfo.role === 'admin' ? 'Administrativo' : 'de Usuario'}</h1>
       
       {error && <Message variant="danger">{error}</Message>}
       
       {loading ? (
         <Loader />
       ) : (
+        userInfo && (
         <>
           <Row className="mb-4">
             <Col md={4}>
@@ -254,6 +279,7 @@ const DashboardScreen = () => {
             </Col>
           </Row>
         </>
+      )
       )}
     </>
   );
