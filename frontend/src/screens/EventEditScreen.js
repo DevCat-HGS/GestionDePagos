@@ -6,10 +6,12 @@ import { toast } from 'react-toastify';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const EventEditScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { userInfo, isAdmin } = useAuth();
   
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -24,24 +26,23 @@ const EventEditScreen = () => {
   
   // Check if user is logged in and is admin
   useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
     if (!userInfo) {
       navigate('/login');
       return;
     }
     
-    const user = JSON.parse(userInfo);
-    if (!user.isAdmin) {
+    if (!isAdmin()) {
       navigate('/');
       toast.error('Acceso denegado. Solo administradores pueden editar eventos.');
     }
-  }, [navigate]);
+  }, [userInfo, isAdmin, navigate]);
   
   // Fetch event details
   useEffect(() => {
     const fetchEventDetails = async () => {
+      if (!userInfo) return;
+      
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         const config = {
           headers: {
             Authorization: `Bearer ${userInfo.token}`,
@@ -89,7 +90,6 @@ const EventEditScreen = () => {
     setError('');
     
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       const config = {
         headers: {
           'Content-Type': 'application/json',
