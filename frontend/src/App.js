@@ -11,6 +11,7 @@ import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import DashboardScreen from './screens/DashboardScreen';
+import PendingApprovalScreen from './screens/PendingApprovalScreen';
 import PaymentListScreen from './screens/PaymentListScreen';
 import PaymentCreateScreen from './screens/PaymentCreateScreen';
 import PaymentEditScreen from './screens/PaymentEditScreen';
@@ -38,6 +39,7 @@ function App() {
             <Route path="/login" element={<LoginScreen />} />
             <Route path="/register" element={<RegisterScreen />} />
             <Route path="/dashboard" element={<DashboardScreen />} />
+            <Route path="/pending-approval" element={<PendingApprovalScreen />} />
             <Route path="/payments" element={<PaymentListScreen />} />
             <Route path="/payments/create" element={<PaymentCreateScreen />} />
             <Route path="/payments/:id" element={<PaymentDetailScreen />} />

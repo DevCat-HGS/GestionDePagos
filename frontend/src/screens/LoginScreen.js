@@ -30,6 +30,15 @@ const LoginScreen = () => {
     
     try {
       const { data } = await loginUser(email, password);
+      
+      // Verificar si el usuario está pendiente de aprobación
+      if (data.approvalStatus === 'pending') {
+        // Guardar información del usuario para mostrar datos en la pantalla de espera
+        localStorage.setItem('userInfo', JSON.stringify(data));
+        navigate('/pending-approval');
+        return;
+      }
+      
       localStorage.setItem('userInfo', JSON.stringify(data));
       toast.success('Inicio de sesión exitoso');
       navigate('/dashboard');
