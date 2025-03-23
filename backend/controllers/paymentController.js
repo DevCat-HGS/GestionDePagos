@@ -1,11 +1,12 @@
 const Payment = require('../models/paymentModel');
+const Event = require('../models/eventModel');
 
 // @desc    Crear un nuevo pago
 // @route   POST /api/payments
 // @access  Private
 const createPayment = async (req, res) => {
   try {
-    const { clientName, clientId, amount, date, status, paymentMethod, notes } = req.body;
+    const { clientName, clientId, amount, date, status, paymentMethod, notes, eventId } = req.body;
 
     const payment = await Payment.create({
       clientName,
@@ -19,6 +20,19 @@ const createPayment = async (req, res) => {
     });
 
     if (payment) {
+      // Si hay un evento asociado, actualizar su monto actual
+      if (eventId) {
+        const event = await Event.findById(eventId);
+        if (event) {
+          // Solo actualizar el monto si el pago está en estado 'pagado'
+          if (payment.status === 'pagado') {
+            event.currentAmount += payment.amount;
+            event.payments.push(payment._id);
+            await event.save();
+          }
+        }
+      }
+      
       res.status(201).json(payment);
     } else {
       res.status(400).json({ message: 'Datos de pago inválidos' });
@@ -98,11 +112,15 @@ const getPaymentById = async (req, res) => {
 // @access  Private
 const updatePayment = async (req, res) => {
   try {
-    const { clientName, clientId, amount, date, status, paymentMethod, notes } = req.body;
+    const { clientName, clientId, amount, date, status, paymentMethod, notes, eventId } = req.body;
 
     const payment = await Payment.findById(req.params.id);
 
     if (payment) {
+      // Guardar el estado y monto anterior para comparar después
+      const previousStatus = payment.status;
+      const previousAmount = payment.amount;
+      
       payment.clientName = clientName || payment.clientName;
       payment.clientId = clientId || payment.clientId;
       payment.amount = amount || payment.amount;
@@ -112,6 +130,45 @@ const updatePayment = async (req, res) => {
       payment.notes = notes || payment.notes;
 
       const updatedPayment = await payment.save();
+      
+      // Buscar eventos que tengan este pago
+      const events = await Event.find({ payments: payment._id });
+      
+      // Si hay eventos asociados, actualizar sus montos
+      if (events.length > 0) {
+        for (const event of events) {
+          // Si el estado cambió a 'pagado' desde otro estado, sumar el monto
+          if (payment.status === 'pagado' && previousStatus !== 'pagado') {
+            event.currentAmount += payment.amount;
+          } 
+          // Si el estado cambió desde 'pagado' a otro estado, restar el monto anterior
+          else if (previousStatus === 'pagado' && payment.status !== 'pagado') {
+            event.currentAmount -= previousAmount;
+          } 
+          // Si el estado sigue siendo 'pagado' pero el monto cambió, ajustar la diferencia
+          else if (payment.status === 'pagado' && previousStatus === 'pagado' && payment.amount !== previousAmount) {
+            event.currentAmount = event.currentAmount - previousAmount + payment.amount;
+          }
+          
+          await event.save();
+        }
+      }
+      
+      // Si se proporcionó un nuevo eventId, asociar el pago a ese evento
+      if (eventId) {
+        const newEvent = await Event.findById(eventId);
+        if (newEvent && !newEvent.payments.includes(payment._id)) {
+          newEvent.payments.push(payment._id);
+          
+          // Si el pago está en estado 'pagado', actualizar el monto del evento
+          if (payment.status === 'pagado') {
+            newEvent.currentAmount += payment.amount;
+          }
+          
+          await newEvent.save();
+        }
+      }
+      
       res.json(updatedPayment);
     } else {
       res.status(404).json({ message: 'Pago no encontrado' });
@@ -129,6 +186,30 @@ const deletePayment = async (req, res) => {
     const payment = await Payment.findById(req.params.id);
 
     if (payment) {
+      // Buscar eventos que tengan este pago
+      const events = await Event.find({ payments: payment._id });
+      
+      // Si hay eventos asociados, actualizar sus montos y eliminar la referencia al pago
+      if (events.length > 0) {
+        for (const event of events) {
+          // Si el pago estaba en estado 'pagado', restar su monto del evento
+          if (payment.status === 'pagado') {
+            event.currentAmount -= payment.amount;
+            // Asegurar que el monto no sea negativo
+            if (event.currentAmount < 0) {
+              event.currentAmount = 0;
+            }
+          }
+          
+          // Eliminar la referencia al pago
+          event.payments = event.payments.filter(
+            (paymentId) => paymentId.toString() !== payment._id.toString()
+          );
+          
+          await event.save();
+        }
+      }
+      
       await payment.deleteOne();
       res.json({ message: 'Pago eliminado' });
     } else {
