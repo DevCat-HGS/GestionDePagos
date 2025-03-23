@@ -6,27 +6,7 @@ import { toast } from 'react-toastify';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import PaymentStatusBadge from '../components/PaymentStatusBadge';
-import axios from 'axios';
-
-// Create axios instance with base URL and auth token
-const API = axios.create({
-  baseURL: '/api',
-});
-
-// Request interceptor for adding auth token
-API.interceptors.request.use(
-  (config) => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      const token = JSON.parse(userInfo).token;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+import { getDashboardData } from '../services/apiService';
 
 const DashboardScreen = () => {
   const navigate = useNavigate();
@@ -61,7 +41,7 @@ const DashboardScreen = () => {
         setLoading(true);
         setError('');
         
-        const { data } = await API.get('/users/dashboard');
+        const { data } = await getDashboardData();
         setStats(data);
       } catch (error) {
         setError(

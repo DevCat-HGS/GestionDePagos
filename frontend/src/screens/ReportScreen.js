@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
-import axios from 'axios';
+import { generatePaymentReport, generateUserReport } from '../services/apiService';
 
 const ReportScreen = () => {
   const navigate = useNavigate();
@@ -34,21 +34,15 @@ const ReportScreen = () => {
     setError('');
     
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-        responseType: 'blob',
+      // Preparar filtros para el reporte
+      const filters = {
+        startDate,
+        endDate,
+        status
       };
       
-      // Build query params
-      const params = new URLSearchParams();
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
-      if (status) params.append('status', status);
-      
-      const response = await axios.get(`/api/payments/report?${params}`, config);
+      // Llamar al servicio API centralizado
+      const response = await generatePaymentReport(filters);
       
       // Create a blob from the response
       const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -90,20 +84,14 @@ const ReportScreen = () => {
     setError('');
     
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-        responseType: 'blob',
+      // Preparar filtros para el reporte
+      const filters = {
+        startDate,
+        endDate
       };
       
-      // Build query params
-      const params = new URLSearchParams();
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
-      
-      const response = await axios.get(`/api/users/report?${params}`, config);
+      // Llamar al servicio API centralizado
+      const response = await generateUserReport(filters);
       
       // Create a blob from the response
       const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

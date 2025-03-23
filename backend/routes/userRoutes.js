@@ -13,6 +13,7 @@ const {
   approveUser
 } = require('../controllers/userController');
 const { getDashboardData } = require('../controllers/dashboardController');
+const { generateUserReport } = require('../controllers/userReportController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // Rutas públicas
@@ -27,6 +28,10 @@ router.route('/profile')
 // Ruta para obtener datos del dashboard
 router.route('/dashboard')
   .get(protect, getDashboardData);
+
+// Ruta para generar reporte de usuarios
+router.route('/report')
+  .get(protect, admin, generateUserReport);
 
 // Rutas protegidas solo para administradores
 router.route('/')

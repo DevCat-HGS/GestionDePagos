@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
-import axios from 'axios';
+import { generateEventReport } from '../services/apiService';
 
 const EventReportScreen = () => {
   const navigate = useNavigate();
@@ -33,21 +33,15 @@ const EventReportScreen = () => {
     setError('');
     
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-        responseType: 'blob',
+      // Preparar filtros para el reporte
+      const filters = {
+        startDate,
+        endDate,
+        status
       };
       
-      // Build query params
-      const params = new URLSearchParams();
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
-      if (status) params.append('status', status);
-      
-      const response = await axios.get(`/api/events/report?${params}`, config);
+      // Llamar al servicio API centralizado
+      const response = await generateEventReport(filters);
       
       // Create a blob from the response
       const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
