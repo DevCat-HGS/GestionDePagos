@@ -2,27 +2,15 @@ import React from 'react';
 import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
   const navigate = useNavigate();
-  
-  // Mock user state - in a real app, this would come from context or Redux
-  const [userInfo, setUserInfo] = React.useState(null);
+  const { userInfo, logout, isAdmin } = useAuth();
   
   const logoutHandler = () => {
-    // Clear user info from localStorage
-    localStorage.removeItem('userInfo');
-    setUserInfo(null);
-    navigate('/login');
+    logout();
   };
-
-  // Check for user in localStorage on component mount
-  React.useEffect(() => {
-    const storedUser = localStorage.getItem('userInfo');
-    if (storedUser) {
-      setUserInfo(JSON.parse(storedUser));
-    }
-  }, []);
 
   return (
     <header>
@@ -36,7 +24,7 @@ const Header = () => {
             <Nav className="ms-auto">
               {userInfo ? (
                 <>
-                  {userInfo.isAdmin && (
+                  {isAdmin() && (
                     <NavDropdown title="Admin" id="adminmenu">
                       <LinkContainer to="/dashboard">
                         <NavDropdown.Item>Dashboard</NavDropdown.Item>

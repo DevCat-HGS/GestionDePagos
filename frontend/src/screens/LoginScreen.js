@@ -1,56 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Form, Button, Row, Col } from 'react-bootstrap';
-import { toast } from 'react-toastify';
 import FormContainer from '../components/FormContainer';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
-import { loginUser } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const LoginScreen = () => {
   const navigate = useNavigate();
+  const { userInfo, loading, login } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
   // Check if user is already logged in
   useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
     if (userInfo) {
       navigate('/dashboard');
     }
-  }, [navigate]);
+  }, [userInfo, navigate]);
   
   const submitHandler = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     
     try {
-      const { data } = await loginUser(email, password);
-      
-      // Verificar si el usuario está pendiente de aprobación
-      if (data.approvalStatus === 'pending') {
-        // Guardar información del usuario para mostrar datos en la pantalla de espera
-        localStorage.setItem('userInfo', JSON.stringify(data));
-        navigate('/pending-approval');
-        return;
-      }
-      
-      localStorage.setItem('userInfo', JSON.stringify(data));
-      toast.success('Inicio de sesión exitoso');
-      navigate('/dashboard');
+      await login(email, password);
+      // La navegación se maneja dentro del contexto de autenticación
     } catch (error) {
       setError(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : 'Error al iniciar sesión'
+        error.message || 'Error al iniciar sesión'
       );
-      toast.error('Error al iniciar sesión');
-    } finally {
-      setLoading(false);
     }
   };
   

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Componente para proteger rutas que requieren autenticación
@@ -8,9 +9,7 @@ import { Navigate, Outlet } from 'react-router-dom';
  * @returns {JSX.Element} - Componente renderizado
  */
 const ProtectedRoute = ({ adminOnly = false }) => {
-  // Obtener información del usuario del localStorage
-  const userInfoString = localStorage.getItem('userInfo');
-  const userInfo = userInfoString ? JSON.parse(userInfoString) : null;
+  const { userInfo, isAdmin } = useAuth();
   
   // Si no hay usuario autenticado, redirigir al login
   if (!userInfo) {
@@ -18,7 +17,7 @@ const ProtectedRoute = ({ adminOnly = false }) => {
   }
   
   // Si la ruta es solo para administradores y el usuario no es admin, redirigir al dashboard
-  if (adminOnly && userInfo.role !== 'admin') {
+  if (adminOnly && !isAdmin()) {
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -29,8 +28,6 @@ const ProtectedRoute = ({ adminOnly = false }) => {
   
   // Si el usuario está rechazado, redirigir al login
   if (userInfo.approvalStatus === 'rejected') {
-    // Eliminar la información del usuario rechazado
-    localStorage.removeItem('userInfo');
     return <Navigate to="/login" replace />;
   }
   

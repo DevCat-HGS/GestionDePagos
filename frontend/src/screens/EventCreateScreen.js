@@ -6,6 +6,7 @@ import FormContainer from '../components/FormContainer';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const EventCreateScreen = () => {
   const navigate = useNavigate();
@@ -19,20 +20,21 @@ const EventCreateScreen = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
+  // Usar el contexto de autenticación
+  const { userInfo, isAdmin } = useAuth();
+  
   // Check if user is logged in and is admin
   useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
     if (!userInfo) {
       navigate('/login');
       return;
     }
     
-    const user = JSON.parse(userInfo);
-    if (!user.isAdmin) {
+    if (!isAdmin()) {
       navigate('/');
       toast.error('Acceso denegado. Solo administradores pueden crear eventos.');
     }
-  }, [navigate]);
+  }, [userInfo, isAdmin, navigate]);
   
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -51,7 +53,7 @@ const EventCreateScreen = () => {
     setError('');
     
     try {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      // Usar el userInfo del contexto de autenticación
       const config = {
         headers: {
           'Content-Type': 'application/json',

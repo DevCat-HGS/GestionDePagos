@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import Loader from '../components/Loader';
 import Message from '../components/Message';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const UserListScreen = () => {
   const navigate = useNavigate();
@@ -14,27 +15,28 @@ const UserListScreen = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
+  // Usar el contexto de autenticación
+  const { userInfo, isAdmin } = useAuth();
+  
   // Check if user is logged in and is admin
   useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
     if (!userInfo) {
       navigate('/login');
       return;
     }
     
-    const user = JSON.parse(userInfo);
-    if (!user.isAdmin) {
+    if (!isAdmin()) {
       navigate('/');
       toast.error('Acceso denegado. Solo administradores pueden ver esta página.');
     }
-  }, [navigate]);
+  }, [userInfo, isAdmin, navigate]);
   
   // Fetch users
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        // Usar el userInfo del contexto de autenticación
         const config = {
           headers: {
             Authorization: `Bearer ${userInfo.token}`,
@@ -62,7 +64,7 @@ const UserListScreen = () => {
   const deleteHandler = async (id) => {
     if (window.confirm('¿Está seguro de eliminar este usuario?')) {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        // Usar el userInfo del contexto de autenticación
         const config = {
           headers: {
             Authorization: `Bearer ${userInfo.token}`,

@@ -10,9 +10,14 @@ API.interceptors.request.use(
   (config) => {
     const userInfo = localStorage.getItem('userInfo');
     if (userInfo) {
-      const token = JSON.parse(userInfo).token;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      try {
+        const parsedUserInfo = JSON.parse(userInfo);
+        const token = parsedUserInfo.token;
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        console.error('Error parsing userInfo:', error);
       }
     }
     return config;
